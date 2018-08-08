@@ -14,6 +14,7 @@ class IMDBApiExtractor(object):
         def find_id_in_name(name):
             return re.match(r'tt\d+', name).group(0)
 
+        glob.glob0()
         return list(map(find_id_in_name, glob.glob('data/*.json')))
 
 
