@@ -48,7 +48,7 @@ class IMDBApiExtractor(object):
         self.extract_data(movie_ids)
 
 if __name__ == '__main__':
-    for num in range(1, 21):
+    for num in range(1, 7):
         print('page', num)
-        url = r'https://www.imdb.com/search/title?genres=adventure&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=PP9NDST9F9Z094T71CHN&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt'.format(num)
+        url = r'https://www.imdb.com/search/title?genres=animation&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=PP9NDST9F9Z094T71CHN&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt'.format(num)
         IMDBApiExtractor().get_and_save_from_url(url)
