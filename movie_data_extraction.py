@@ -42,6 +42,6 @@ class IMDBApiExtractor(object):
 
 if __name__ == '__main__':
     for num in range(1, 25):
-        name = r'top_action_page_{}'.format(num)
+        print('page', num)
         url = r'https://www.imdb.com/search/title?genres=action&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=A6GFCX6H09E3SXSYTG8M&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt'.format(num)
         IMDBApiExtractor().get_and_save_from_url(url)
