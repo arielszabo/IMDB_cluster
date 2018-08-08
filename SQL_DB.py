@@ -5,6 +5,7 @@ class DB(object):
     def __init__(self):
         self.db_name = "IMDB_data.db"
         self.raw_data_path_folder = r'raw_data'
+        self.create_DB()
 
     # the Ratings column is out because its more than one row and we make a differ table for it
     def _create_main_table(self):
@@ -60,7 +61,10 @@ class DB(object):
             conn.commit()
 
     def create_DB(self):
-        if not os.path.exists(self.db_name):
+        if os.path.exists(self.db_name):
+          print('Great the {} is here'.format(self.db_name))
+          #todo: check that all the json raw data is in and if not insert it
+        else:
             self._create_main_table()
             self._create_rating_table()
 
@@ -88,5 +92,3 @@ class DB(object):
 
 if __name__ == '__main__':
     db = DB()
-
-    db.create_DB()
