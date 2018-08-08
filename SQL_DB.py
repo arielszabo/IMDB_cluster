@@ -4,6 +4,7 @@ import os
 class DB(object):
     def __init__(self):
         self.db_name = "IMDB_data.db"
+        self.raw_data_path_folder = r'raw_data'
 
     # the Ratings column is out because its more than one row and we make a differ table for it
     def _create_main_table(self):
@@ -63,22 +64,28 @@ class DB(object):
             self._create_main_table()
             self._create_rating_table()
 
-    def insert_data(self):
+    def insert_data(self, data, over_right=False):
+        #todo: if data to insert is already in db don't insert unless over_right=True
 
-        with sqlite3.connect("sample.db") as conn:
+        with sqlite3.connect(self.db_name) as conn:
             c = conn.cursor()
-            companies = [
-                ('Foo', 12),
-                ('Bar', 7),
-                ('Moo', 99),
-            ]
+            data = [
+                {'name': 'Foo', 'employees': 12},
+                {'name': 'Bar', 'employees': 7},
+                {'name': 'Moo', 'employees': 99}
+                    ]
+            keys = ', '.join(data[0].keys())
+            value = [tuple(movie_json) for movie_json in data]
 
             try:
-                sql = '''INSERT INTO companies (name, employees) VALUES (?, ?)'''
-                c.executemany(sql, companies)
+                sql = '''INSERT INTO companies ({}) VALUES (?, ?)'''.format(keys)
+                c.executemany(sql, value)
             except sqlite3.IntegrityError as e:
-                print('sqlite error: ', e.args[0])  # column name is not unique
+                print('sqlite error: ', e.args[0])
             conn.commit()
+
+            #todo: save all the inserted data into a json
+
 if __name__ == '__main__':
     db = DB()
 
