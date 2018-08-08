@@ -24,6 +24,10 @@ class IMDBApiExtractor(object):
         print('Extract {} movie data:'.format(len(ids_to_query)))
         for i, movie_id in enumerate(ids_to_query):
             response = requests.get('http://www.omdbapi.com/?i={}&apikey={}&?plot=full'.format(movie_id, self.user_api_key))
+
+            if response.json() == {"Error": "Request limit reached!", "Response": "False"}:
+                assert TypeError("Request limit reached!")
+
             with open(os.path.join('raw_data', '{}.json'.format(movie_id)), 'w') as j_file:
                 json.dump(response.json(), j_file)
 
