@@ -46,6 +46,7 @@ class DB(object):
                 print('sqlite error:', e.args[0])  # table companies already exists
 
             conn.commit()
+            print('Created the movies table')
 
     def _create_rating_table(self):
         with sqlite3.connect(self.db_name) as conn:
@@ -62,50 +63,56 @@ class DB(object):
                 print('sqlite error:', e.args[0])  # table companies already exists
 
             conn.commit()
+            print('Created the Ratings table')
 
     def create_DB(self):
         if os.path.exists(self.db_name):
           print('Great the {} is exists'.format(self.db_name))
+          #todo: check if all the tables exist
           #todo: check that all the json raw data is in and if not insert it
         else:
             self._create_main_table()
             self._create_rating_table()
 
-    def insert_data(self, data, over_right=False):
-        if not over_right:
-            json_names_to_load = list(self._raw_jsons.update(self.already_in_db()))
-
-        #todo: if data to insert is already in db don't insert unless over_right=True
-
+    def _insert_data(self,data, table):
         with sqlite3.connect(self.db_name) as conn:
             c = conn.cursor()
-            # data = [
-            #     {'name': 'Foo', 'employees': 12},
-            #     {'name': 'Bar', 'employees': 7},
-            #     {'name': 'Moo', 'employees': 99}
-            #         ]
-            keys = ', '.join(data[0].keys())
-            value = [tuple(movie_json) for movie_json in data]
+
+            keys_name = ', '.join(data[0].keys())
+            place_holders = ', '.join(['?'] * len(data[0].keys()))
+            value = [tuple(movie_json.values()) for movie_json in data]
 
             try:
-                sql = '''INSERT INTO main_IMDB_api_data ({}) VALUES (?, ?)'''.format(keys)
+                sql = '''INSERT INTO {} ({}) VALUES ({})'''.format(table, keys_name, place_holders)
+                print(sql)
                 c.executemany(sql, value)
             except sqlite3.IntegrityError as e:
                 print('sqlite error: ', e.args[0])
             conn.commit()
+        print('INSERT {} rows into {}'.format(len(data), table))
 
-            #todo: save all the inserted data into a json
+    def prepare_data_and_insert(self, over_right=False):
+        json_names_to_load = self._raw_jsons()
+        if over_right:
+            # todo: delete exisiting ids
+            print('None')
+        else:
+            json_names_to_load -= set(self._already_in_db())
 
-    def already_in_db(self):
+        main_data, ratings_data = self._load_jsons(json_names_to_load)
+        self._insert_data(data=main_data, table='movies')
+        self._insert_data(data=ratings_data, table='Ratings')
+
+    def _already_in_db(self):
         with sqlite3.connect(self.db_name) as conn:
             c = conn.cursor()
-            return [row for row in c.execute('SELECT imdbID FROM main_IMDB_api_data')]
+            return [row[0] for row in c.execute('SELECT imdbID FROM movies')]
 
     def _raw_jsons(self):
         list_of_json_files = glob.glob(os.path.join(self.raw_data_path_folder, '*.json'))
         return set(map(lambda name: re.search(r'tt\d+', name).group(0), list_of_json_files))
 
-    def load_jsons(self, json_names):
+    def _load_jsons(self, json_names):
         main_jsons = []
         ratings_jsons = []
         for name in json_names:
@@ -123,11 +130,5 @@ class DB(object):
 
 if __name__ == '__main__':
     db = DB('imdb_test.db')
-    # with open(os.path.join('raw_data','tt4154796.json'), 'r') as jfile:
-    #     tt4154796 = json.load(jfile)
-    # print(tt4154796)
-    # print('Ratings' in tt4154796)
-    # tt4154796.pop('Ratings', None)
-    # print('Ratings' in tt4154796)
-    # exit()
-    # db.insert_data([tt4154796])
+    # db.prepare_data_and_insert()
+    print(db._already_in_db())
