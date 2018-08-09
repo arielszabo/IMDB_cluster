@@ -78,6 +78,11 @@ class DB(object):
         with sqlite3.connect(self.db_name) as conn:
             c = conn.cursor()
 
+            # keys = data[0].keys()
+            # values = []
+            # for movie_json in data:
+            #     values.append(tuple(movie_json[k] for k in keys))
+
             keys_name = ', '.join(data[0].keys())
             place_holders = ', '.join(['?'] * len(data[0].keys()))
             value = [tuple(movie_json.values()) for movie_json in data]
