@@ -7,12 +7,11 @@ import glob
 
 
 class IMDBApiExtractor(object):
-
     def __init__(self, user_api_key='93359a2c'):
         self.user_api_key = user_api_key
-        self.existing_movie_ids = self._load_existing_movie_ids()
+        self.existing_movie_ids = self._load_existing_movie_ids_from_raw_json()
 
-    def _load_existing_movie_ids(self):
+    def _load_existing_movie_ids_from_raw_json(self):
         """
         Find all the movie ids based already extracted json files in the 'raw_data'.
         :return: A list of existing movie ids' based on the json file names.
@@ -58,9 +57,9 @@ class IMDBApiExtractor(object):
             percent_queried = 100*(i + 1)/len(ids_to_query)
             print('Finished: {}%'.format(round(percent_queried, 2)))
 
-    def get_and_save_from_url(self, url):
+    def get_and_save_from_html_page(self, url):
         """
-        Extract and save movies' data json based on movie ids'extracted from the given url.
+        Extract and save movies' data json based on movie ids'extracted from the given url's html.
         :param [str] url: a url from to extract movies by their id
         :return: None, saves the jsons
         """
@@ -73,4 +72,4 @@ if __name__ == '__main__':
     for num in range(1, 7):
         print('page', num)
         url = r'https://www.imdb.com/search/title?genres=biography&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=PP9NDST9F9Z094T71CHN&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt'.format(num)
-        IMDBApiExtractor().get_and_save_from_url(url)
+        IMDBApiExtractor().get_and_save_from_html_page(url)

@@ -19,9 +19,6 @@ class DB(object):
                 c.execute('''CREATE table IF NOT EXISTS {} (
                     id PRIMARY KEY,
                     {})'''.format(table_name, table_columns))
-                print('''CREATE table IF NOT EXISTS {} (
-                    id PRIMARY KEY,
-                    {})'''.format(table_name, table_columns))
             except sqlite3.OperationalError as e:
                 print('sqlite error:', e.args[0])
 
@@ -29,7 +26,7 @@ class DB(object):
 
     def create_DB(self):
         tables_creation_params = [
-            {'table_name':'movies', 'table_columns':'''Actors VARCRCHAR(400), 
+            {'table_name': 'movies', 'table_columns': '''Actors VARCRCHAR(400), 
                                                         Awards VARCRCHAR(400),
                                                         BoxOffice VARCRCHAR(400),
                                                         Country VARCRCHAR(400),
@@ -61,32 +58,38 @@ class DB(object):
             self._create_table(**table_params)
 
         # Insert raw_data
+        self.prepare_data_and_insert()
 
-    def _insert_data(self,data, table):
+    def _insert_data(self, data, table):
         with sqlite3.connect(self.db_name) as conn:
             c = conn.cursor()
 
-            # keys = data[0].keys()
-            # values = []
-            # for movie_json in data:
-            #     values.append(tuple(movie_json[k] for k in keys))
+            fields = list(data[0].keys())
+            # check if fields have invalid characters
+            for field in fields:
+                if re.match('\W', field):
+                    raise ValueError('Fields have invalid characters')
 
-            keys_name = ', '.join(data[0].keys())
-            place_holders = ', '.join(['?'] * len(data[0].keys()))
-            value = [tuple(movie_json.values()) for movie_json in data]
+
+            values = []
+            for movie_details in data:
+                values_of_one_movie = tuple(movie_details[k] for k in fields)
+                values.append(values_of_one_movie)
+
+            field_names = ', '.join(fields)
+            place_holders = ', '.join(['?'] * len(fields))
 
             try:
-                sql = '''INSERT INTO {} ({}) VALUES ({})'''.format(table, keys_name, place_holders)
-                print(sql)
-                c.executemany(sql, value)
+                sql = '''INSERT INTO {} ({}) VALUES ({})'''.format(table, field_names, place_holders)
+                c.executemany(sql, values)
             except sqlite3.IntegrityError as e:
                 print('sqlite error: ', e.args[0])
             conn.commit()
         print('INSERT {} rows into {}'.format(len(data), table))
 
-    def prepare_data_and_insert(self, over_right=False):
+    def prepare_data_and_insert(self, over_write=False):
         json_names_to_load = self._raw_jsons()
-        if over_right:
+        if over_write:
             # todo: delete exisiting ids
             print('None')
         else:
@@ -110,15 +113,16 @@ class DB(object):
         ratings_jsons = []
         for name in json_names:
             with open(os.path.join(self.raw_data_path_folder, '{}.json'.format(name)), 'r') as jfile:
-                j = json.load(jfile)
+                movie_details = json.load(jfile)
 
-                j_rating = j['Ratings']
-                for rating in j_rating:
-                    rating['imdbID'] = j['imdbID']
+                if 'Ratings' in movie_details:
+                    for rating in movie_details['Ratings']:
+                        rating['imdbID'] = movie_details['imdbID']
 
-                j.pop('Ratings', None)
-                main_jsons.append(j)
-                ratings_jsons += j_rating
+                    ratings_jsons += movie_details.pop('Ratings')
+
+                main_jsons.append(movie_details)
+
         return main_jsons, ratings_jsons
 
 if __name__ == '__main__':
