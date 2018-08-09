@@ -16,7 +16,7 @@ class DB(object):
             c = conn.cursor()
 
             try:
-                c.execute('''CREATE TABLE main_IMDB_api_data (
+                c.execute('''CREATE TABLE movies (
                     id PRIMARY KEY,
                     Actors VARCRCHAR(400),
                     Awards VARCRCHAR(400),
@@ -41,7 +41,7 @@ class DB(object):
                     Year INTEGER,
                     imdbID VARCRCHAR(400) UNIQUE NOT NULL,
                     imdbRating DOUBLE,
-                    imdbVotes VARCRCHAR(400)''')
+                    imdbVotes VARCRCHAR(400))''')
             except sqlite3.OperationalError as e:
                 print('sqlite error:', e.args[0])  # table companies already exists
 
@@ -52,11 +52,11 @@ class DB(object):
             c = conn.cursor()
 
             try:
-                c.execute('''CREATE TABLE Ratings_IMDB_api_data (
+                c.execute('''CREATE TABLE Ratings (
                     id PRIMARY KEY,
                     imdbID VARCRCHAR(400) NOT NULL,
                     Value VARCRCHAR(100),
-                    Source VARCRCHAR(100)
+                    Source VARCRCHAR(100))
                     ''')
             except sqlite3.OperationalError as e:
                 print('sqlite error:', e.args[0])  # table companies already exists
@@ -123,11 +123,11 @@ class DB(object):
 
 if __name__ == '__main__':
     db = DB('imdb_test.db')
-    with open(os.path.join('raw_data','tt4154796.json'), 'r') as jfile:
-        tt4154796 = json.load(jfile)
-    print(tt4154796)
-    print('Ratings' in tt4154796)
-    tt4154796.pop('Ratings', None)
-    print('Ratings' in tt4154796)
+    # with open(os.path.join('raw_data','tt4154796.json'), 'r') as jfile:
+    #     tt4154796 = json.load(jfile)
+    # print(tt4154796)
+    # print('Ratings' in tt4154796)
+    # tt4154796.pop('Ratings', None)
+    # print('Ratings' in tt4154796)
     # exit()
-    db.insert_data([tt4154796])
+    # db.insert_data([tt4154796])
