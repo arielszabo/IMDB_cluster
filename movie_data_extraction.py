@@ -13,9 +13,18 @@ class IMDBApiExtractor(object):
         self.existing_movie_ids = self._load_existing_movie_ids()
 
     def _load_existing_movie_ids(self):
+        """
+        Find all the movie ids based already extracted json files in the 'raw_data'.
+        :return: A list of existing movie ids' based on the json file names.
+        """
         return list(map(lambda name: re.search(r'tt\d+', name).group(0), glob.glob('raw_data/*.json')))
 
-    def get_movie_ids(self, html_url):
+    def _get_movie_ids(self, html_url):
+        """
+        Extract movies' id in the html from the given url.
+        :param [str] html_url: a url from to extract movies by their id
+        :return: A list of all movie ids which have not already been extracted.
+        """
         page = requests.get(url=html_url)
         soup = BeautifulSoup(page.text, 'html.parser')
 
@@ -26,7 +35,12 @@ class IMDBApiExtractor(object):
 
         return set(ids).difference(self.existing_movie_ids)
 
-    def extract_data(self, ids_to_query):
+    def _extract_data(self, ids_to_query):
+        """
+        Query and save movie data. Alert and raise errors if we reach the request limit or if the 'Response' is false.
+        :param [list] ids_to_query: A list of movie ids to query the IMDB API
+        :return: None, save the data json files
+        """
         print('Extract {} movie data:'.format(len(ids_to_query)))
         for i, movie_id in enumerate(ids_to_query):
             response = requests.get('http://www.omdbapi.com/?i={}&apikey={}&?plot=full'.format(movie_id,
@@ -45,10 +59,15 @@ class IMDBApiExtractor(object):
             print('Finished: {}%'.format(round(percent_queried, 2)))
 
     def get_and_save_from_url(self, url):
-        movie_ids = self.get_movie_ids(html_url=url)
+        """
+        Extract and save movies' data json based on movie ids'extracted from the given url.
+        :param [str] url: a url from to extract movies by their id
+        :return: None, saves the jsons
+        """
+        movie_ids = self._get_movie_ids(html_url=url)
         if movie_ids == set([]):
             return None
-        self.extract_data(movie_ids)
+        self._extract_data(movie_ids)
 
 if __name__ == '__main__':
     for num in range(1, 7):
