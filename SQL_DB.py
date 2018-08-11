@@ -8,6 +8,34 @@ class DB(object):
     def __init__(self, db_name="IMDB_data.db"):
         self.db_name = db_name
         self.raw_data_path_folder = r'raw_data'
+        self.table_metadata = {'movies':{'Actors':'VARCRCHAR(400)',
+                                                       'Awards':'VARCRCHAR(400)',
+                                                       'BoxOffice':'VARCRCHAR(400)',
+                                                       'Country':'VARCRCHAR(400)',
+                                                       'DVD':'VARCRCHAR(400)',
+                                                       'Director':'VARCRCHAR(400)',
+                                                       'Genre':'VARCRCHAR(400)',
+                                                       'Language':'VARCRCHAR(400)',
+                                                       'Metascore':'DOUBLE',
+                                                       'Plot':'VARCRCHAR(400)',
+                                                       'Poster':'VARCRCHAR(400)',
+                                                       'Production':'VARCRCHAR(400)',
+                                                       'Rated':'VARCRCHAR(400)',
+                                                       'Released':'VARCRCHAR(400)',
+                                                       'Response':'VARCRCHAR(100)',
+                                                       'Runtime':'VARCRCHAR(400)',
+                                                       'Title':'VARCRCHAR(400)',
+                                                       'Type':'VARCRCHAR(400)',
+                                                       'Website':'VARCRCHAR(400)',
+                                                       'Writer':'VARCRCHAR(400)',
+                                                       'Year':'VARCRCHAR(100)',
+                                                       'totalSeasons':'INTEGER',
+                                                       'imdbID':'VARCRCHAR(400) UNIQUE NOT NULL',
+                                                       'imdbRating':'DOUBLE',
+                                                       'imdbVotes':'VARCRCHAR(400)'},
+                               'ratings':{'imdbID':'VARCRCHAR(400) NOT NULL',
+                                                        'Value':'VARCRCHAR(100)',
+                                                        'Source':'VARCRCHAR(100)'}}  # {table_name:{column_name:column_type}}
         self.create_DB()
 
     # the Ratings column is out because its more than one row and we make a differ table for it
@@ -15,47 +43,19 @@ class DB(object):
         with sqlite3.connect(self.db_name) as conn:
             c = conn.cursor()
 
+            column_type = ['{} {}'.format(col, sql_type) for col, sql_type in table_columns.items()]
             try:
                 c.execute('''CREATE table IF NOT EXISTS {} (
                     id PRIMARY KEY,
-                    {})'''.format(table_name, table_columns))
+                    {})'''.format(table_name, column_type))
             except sqlite3.OperationalError as e:
                 print('sqlite error:', e.args[0])
 
             conn.commit()
 
     def create_DB(self):
-        tables_creation_params = [
-            {'table_name': 'movies', 'table_columns': '''Actors VARCRCHAR(400), 
-                                                        Awards VARCRCHAR(400),
-                                                        BoxOffice VARCRCHAR(400),
-                                                        Country VARCRCHAR(400),
-                                                        DVD VARCRCHAR(400),
-                                                        Director VARCRCHAR(400),
-                                                        Genre VARCRCHAR(400),
-                                                        Language VARCRCHAR(400),
-                                                        Metascore DOUBLE,
-                                                        Plot VARCRCHAR(400),
-                                                        Poster VARCRCHAR(400),
-                                                        Production VARCRCHAR(400),
-                                                        Rated VARCRCHAR(400),
-                                                        Released VARCRCHAR(400),
-                                                        Response VARCRCHAR(100),
-                                                        Runtime VARCRCHAR(400),
-                                                        Title VARCRCHAR(400),
-                                                        Type VARCRCHAR(400),
-                                                        Website VARCRCHAR(400),
-                                                        Writer VARCRCHAR(400),
-                                                        Year INTEGER,
-                                                        imdbID VARCRCHAR(400) UNIQUE NOT NULL,
-                                                        imdbRating DOUBLE,
-                                                        imdbVotes VARCRCHAR(400)'''},
-            {'table_name': 'ratings', 'table_columns': '''imdbID VARCRCHAR(400) NOT NULL,
-                                                            Value VARCRCHAR(100),
-                                                            Source VARCRCHAR(100)'''},
-        ]
-        for table_params in tables_creation_params:
-            self._create_table(**table_params)
+        for table_name, table_columns_types in self.table_metadata.items():
+            self._create_table(table_name, table_columns_types)
 
         # Insert raw_data
         self.prepare_data_and_insert()
@@ -64,20 +64,22 @@ class DB(object):
         with sqlite3.connect(self.db_name) as conn:
             c = conn.cursor()
 
-            fields = list(data[0].keys())
+
+            table_fields = list(self.table_metadata[table].keys())
             # check if fields have invalid characters
-            for field in fields:
+            for field in table_fields:
                 if re.match('\W', field):
                     raise ValueError('Fields have invalid characters')
 
 
             values = []
             for movie_details in data:
-                values_of_one_movie = tuple(movie_details[k] for k in fields)
+                print(movie_details.values())
+                values_of_one_movie = tuple(movie_details[k] for k in table_fields)  #if k in movie_details else 'Null'
                 values.append(values_of_one_movie)
 
-            field_names = ', '.join(fields)
-            place_holders = ', '.join(['?'] * len(fields))
+            field_names = ', '.join(table_fields)
+            place_holders = ', '.join(['?'] * len(table_fields))
 
             try:
                 sql = '''INSERT INTO {} ({}) VALUES ({})'''.format(table, field_names, place_holders)
@@ -102,7 +104,10 @@ class DB(object):
     def _already_in_db(self):
         with sqlite3.connect(self.db_name) as conn:
             c = conn.cursor()
-            return [row[0] for row in c.execute('SELECT imdbID FROM movies')]
+            if c.execute('SELECT count(0) FROM movies').fetchone()[0] > 0:
+                return [row[0] for row in c.execute('SELECT imdbID FROM movies')]
+            else:
+                return []
 
     def _raw_jsons(self):
         list_of_json_files = glob.glob(os.path.join(self.raw_data_path_folder, '*.json'))
@@ -126,4 +131,4 @@ class DB(object):
         return main_jsons, ratings_jsons
 
 if __name__ == '__main__':
-    db = DB('imdb_test.db')
+    db = DB('imdb_prod.db') #todo: deal with series and not only movies
