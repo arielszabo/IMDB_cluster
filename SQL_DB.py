@@ -36,7 +36,15 @@ class DB(object):
                                'ratings':{'imdbID':'VARCRCHAR(400) NOT NULL',
                                                         'Value':'VARCRCHAR(100)',
                                                         'Source':'VARCRCHAR(100)'}}  # {table_name:{column_name:column_type}}
+        self.validate_field_names()
         self.create_DB()
+
+    def validate_field_names(self):
+        for table_name, field_n_type in self.table_metadata.items():
+            # check if fields have invalid characters
+            for field in field_n_type:
+                if re.match('\W', field):
+                    raise ValueError('{} fields have invalid characters'.format(field))
 
     # the Ratings column is out because its more than one row and we make a differ table for it
     def _create_table(self, table_name, table_columns):
@@ -66,11 +74,6 @@ class DB(object):
 
 
             table_fields = list(self.table_metadata[table].keys())
-            # check if fields have invalid characters
-            for field in table_fields:
-                if re.match('\W', field):
-                    raise ValueError('Fields have invalid characters')
-
 
             values = []
             for movie_details in data:
