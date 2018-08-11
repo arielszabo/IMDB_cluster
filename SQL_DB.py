@@ -55,7 +55,7 @@ class DB(object):
             try:
                 c.execute('''CREATE table IF NOT EXISTS {} (
                     id PRIMARY KEY,
-                    {})'''.format(table_name, column_type))
+                    {})'''.format(table_name, ', '.join(column_type)))
             except sqlite3.OperationalError as e:
                 print('sqlite error:', e.args[0])
 
@@ -77,8 +77,7 @@ class DB(object):
 
             values = []
             for movie_details in data:
-                print(movie_details.values())
-                values_of_one_movie = tuple(movie_details[k] for k in table_fields)  #if k in movie_details else 'Null'
+                values_of_one_movie = tuple(movie_details[k] if k in movie_details else 'Not_existing' for k in table_fields)
                 values.append(values_of_one_movie)
 
             field_names = ', '.join(table_fields)
@@ -102,7 +101,7 @@ class DB(object):
 
         main_data, ratings_data = self._load_jsons(json_names_to_load)
         self._insert_data(data=main_data, table='movies')
-        self._insert_data(data=ratings_data, table='Ratings')
+        self._insert_data(data=ratings_data, table='ratings')
 
     def _already_in_db(self):
         with sqlite3.connect(self.db_name) as conn:
@@ -134,4 +133,4 @@ class DB(object):
         return main_jsons, ratings_jsons
 
 if __name__ == '__main__':
-    db = DB('imdb_prod.db') #todo: deal with series and not only movies
+    db = DB('imdb_test.db') #todo: deal with series and not only movies
