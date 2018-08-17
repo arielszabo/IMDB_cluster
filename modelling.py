@@ -22,6 +22,15 @@ class MovieVectorization(object):
 
         return win_number, nominate_number
 
+    @staticmethod
+    def extract_from_comma_separated_strings(full_df, column_name):
+        vec = CountVectorizer(tokenizer=lambda t: re.split(' , |, |,| ,', t))
+
+        df_array = vec.fit_transform(full_df[column_name].fillna('Not_provided')).toarray()
+        fields = ['{}_{}'.format(column_name, col) for col in vec.get_feature_names()]
+
+        return pd.DataFrame(df_array, columns=fields)
+
     def movies_cleaning(self):
         # drop unrelevant columns
         self.movies_table.drop(['id', 'DVD', 'Website', 'Response', 'Poster', 'Released'], axis=1, inplace=True)
@@ -33,7 +42,7 @@ class MovieVectorization(object):
         box_office_pound = self.movies_table.dropna()[~self.movies_table['BoxOffice'].dropna().str.contains('\$')]
 
         self.movies_table['BoxOffice'] = self.movies_table.BoxOffice.str.replace('\D', '').replace('', np.nan)
-        self.movies_table['BoxOffice'].astype(float, copy=False)
+        self.movies_table['BoxOffice'] = self.movies_table['BoxOffice'].astype(float)
         self.movies_table.loc[box_office_pound.index, 'BoxOffice'] *= 1.3
 
         self.movies_table['Year'] = self.movies_table['Year'].apply(lambda years:
@@ -41,16 +50,7 @@ class MovieVectorization(object):
                                                                              for year in str(years).split(r'–')])
                                                                     )
 
-        self.movies_table['Runtime'] = self.movies_table.Runtime.str.extract('(\d+)').astype(float)
-
-    @staticmethod
-    def extract_from_comma_sperated_strings(full_df, column_name):
-        vec = CountVectorizer(tokenizer=lambda t: re.split(' , |, |,| ,', t))
-
-        df_array = vec.fit_transform(full_df[column_name].fillna('Not_provided')).toarray()
-        fields = ['{}_{}'.format(column_name, col) for col in vec.get_feature_names()]
-
-        return pd.DataFrame(df_array, columns=fields)
+        self.movies_table['Runtime'] = self.movies_table.Runtime.str.extract('(\d+)', expand=True).astype(float)
 
     def movies_extract_features(self):
         self.movies_table['Awards_wins'], self.movies_table['Awards_nominate'] =\
@@ -72,5 +72,6 @@ if __name__ == '__main__':
     movies = MovieVectorization(db_name='imdb_test.db')
     movies.movies_cleaning()
     movies.movies_extract_features()
+    print(movies.movies_table.head())
 
     # movies_after_feature_extraction.to_sql(name='movies_extracted', con=engine)
