@@ -7,13 +7,14 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 
 class MovieVectorization(object):
-    def __init__(self, dbname):
-        self.sql_engine = sqlalchemy.create_engine('sqlite:///{}'.format(os.path.join(os.getcwd(), dbname)))
+    def __init__(self, db_name):
+        self.sql_engine = sqlalchemy.create_engine('sqlite:///{}'.format(os.path.join(os.getcwd(), db_name)))
         self.movies_table = pd.read_sql("""select * from movies""", con=self.sql_engine)
 
-    def extract_win_and_nominated_awards(self, awards_string):
+    @staticmethod
+    def extract_win_and_nominated_awards(awards_string):
         win_number, nominate_number = 0, 0
-        for i in re.split(r'&|,|\.', str(awards_string)):
+        for i in re.split('[&,\.]', str(awards_string)):
             if 'nominat' in i.lower():
                 nominate_number += int(re.search('\d+', i).group(0))
             elif ('win' in i.lower()) or ('won' in i.lower()):
@@ -29,15 +30,21 @@ class MovieVectorization(object):
 
         self.movies_table['imdbVotes'] = self.movies_table['imdbVotes'].str.replace(',', '').astype(float)
 
-        BoxOffice_pound_index = self.movies_table.dropna()[~self.movies_table['BoxOffice'].dropna().str.contains('\$')].index
+        box_office_pound = self.movies_table.dropna()[~self.movies_table['BoxOffice'].dropna().str.contains('\$')]
 
+        self.movies_table['BoxOffice'] = self.movies_table.BoxOffice.str.replace('\D', '').replace('', np.nan)
+        self.movies_table['BoxOffice'].astype(float, copy=False)
+        self.movies_table.loc[box_office_pound.index, 'BoxOffice'] *= 1.3
 
-        self.movies_table['BoxOffice'] = self.movies_table.BoxOffice.str.replace('\D', '').astype(float)
-        self.movies_table.loc[BoxOffice_pound_index, 'BoxOffice'] *= 1.3
+        self.movies_table['Year'] = self.movies_table['Year'].apply(lambda years:
+                                                                    np.mean([float(year)
+                                                                             for year in str(years).split(r'–')])
+                                                                    )
 
         self.movies_table['Runtime'] = self.movies_table.Runtime.str.extract('(\d+)').astype(float)
 
-    def extract_from_comma_sperated_strings(self, full_df, column_name):
+    @staticmethod
+    def extract_from_comma_sperated_strings(full_df, column_name):
         vec = CountVectorizer(tokenizer=lambda t: re.split(' , |, |,| ,', t))
 
         df_array = vec.fit_transform(full_df[column_name].fillna('Not_provided')).toarray()
@@ -46,19 +53,23 @@ class MovieVectorization(object):
         return pd.DataFrame(df_array, columns=fields)
 
     def movies_extract_features(self):
-        self.movies_table['Awards_wins'], self.movies_table['Awards_nominate'] = zip(*self.movies_table['Awards'].apply(self.extract_win_and_nominated_awards))
+        self.movies_table['Awards_wins'], self.movies_table['Awards_nominate'] =\
+            zip(*self.movies_table['Awards'].apply(self.extract_win_and_nominated_awards))
+
         self.movies_table.drop('Awards', axis=1, inplace=True)
 
         for column_name in ['Country', 'Director', 'Genre', 'Language', 'Actors', 'Production', 'Writer']:
             if column_name == 'Director':  # There are some co-directors which is noted with perentesis
                 self.movies_table['Director'] = self.movies_table['Director'].str.replace('\(.+\)', '')
-            movies_table = movies_table.join(self.extract_from_comma_sperated_strings(self.movies_table, column_name))
+                self.movies_table = self.movies_table.join(self.extract_from_comma_sperated_strings(self.movies_table,
+                                                                                                    column_name))
             self.movies_table.drop(column_name, axis=1, inplace=True)
 
-        return movies_table
+        return self.movies_table
+
 
 if __name__ == '__main__':
-    movies = MovieVectorization(dbname='imdb_test.db')
+    movies = MovieVectorization(db_name='imdb_test.db')
     movies.movies_cleaning()
     movies.movies_extract_features()
 
