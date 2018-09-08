@@ -78,7 +78,7 @@ class IMDBApiExtractor(object):
         self._extract_data(movie_ids)
 
 if __name__ == '__main__':
-    links = [
+    # links = [
         # 'https://www.imdb.com/search/title?genres=drama&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt',
         # 'https://www.imdb.com/search/title?genres=family&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt',
         # 'https://www.imdb.com/search/title?genres=fantasy&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt',
@@ -102,26 +102,26 @@ if __name__ == '__main__':
     #         url = link.format(num)
     #         IMDBApiExtractor().get_and_save_from_html_page(url)
 
-    # movie_name = 'TheGodFather1995'
-    # PARAMS = {
-    #     'action': 'query',
-    #     'format': 'json',
-    #     'list': 'search',
-    #     'srsearch': movie_name
-    # }
-    # r = requests.get(url=r'https://en.wikipedia.org/w/api.php', params=PARAMS)
-    # # for movie in r.json()["query"]["search"]:
-    # #     page_id = movie["pageid"]
-    #
-    # page_id = r.json()["query"]["search"][0]["pageid"]  # the first one is the closest?
-    #
-    # PARAMS = {
-    #     'action': 'parse',
-    #     'pageid': page_id,
-    #     'format': 'json',
-    #     'prop': 'text'
-    # }
-    # r = requests.get(url=r'https://en.wikipedia.org/w/api.php', params=PARAMS)
-    # print(r.json()['parse']['text']['*'])
-    # # soup = BeautifulSoup(r.json()['parse']['text']['*'], 'html.parser')
-    # # print(soup.get_text())
+    movie_name = 'TheGodFather1995'
+    PARAMS = {
+        'action': 'query',
+        'format': 'json',
+        'list': 'search',
+        'srsearch': movie_name
+    }
+    r = requests.get(url=r'https://en.wikipedia.org/w/api.php', params=PARAMS)
+    # for movie in r.json()["query"]["search"]:
+    #     page_id = movie["pageid"]
+
+    page_id = r.json()["query"]["search"][0]["pageid"]  # the first one is the closest?
+
+    PARAMS = {
+        'action': 'parse',
+        'pageid': page_id,
+        'format': 'json',
+        'prop': 'text'
+    }
+    r = requests.get(url=r'https://en.wikipedia.org/w/api.php', params=PARAMS)
+    print(r.json()['parse']['text']['*'])
+    # soup = BeautifulSoup(r.json()['parse']['text']['*'], 'html.parser')
+    # print(soup.get_text())
