@@ -77,6 +77,54 @@ class IMDBApiExtractor(object):
             return None
         self._extract_data(movie_ids)
 
+
+class WikiApiExtractor(object):
+    def __init__(self):
+        self.api_url = r'https://en.wikipedia.org/w/api.php'
+
+    def get_page_id_by_text_search(self, text_to_search_for):
+        get_params = {
+            'action': 'query',
+            'format': 'json',
+            'list': 'search',
+            'srsearch': text_to_search_for
+        }
+        response = requests.get(url= self.api_url, params=get_params)
+
+        if int(response.status_code) != 200:
+            assert ValueError(
+                f'The request for "{text_to_search_for}" returned with status_code: {response.status_code}'
+            ) #todo: something better
+
+        if response.json()['query']['searchinfo']['totalhits'] == 0:
+            print(f'"{text_to_search_for}" have no results')
+            return None  #todo: something better
+
+        if 'error' in response.json():
+            print(f'"{text_to_search_for}" had an error')
+            return None  # todo: something better
+
+        return response.json()["query"]["search"][0]["pageid"]  # the first one is the best
+
+    def extract_text_first_section(self, page_id):
+        params = {
+            'action': 'query',
+            'format': 'json',
+            'prop': 'extracts',
+            'exintro': 'True',
+            'pageids': page_id
+        }
+        response = requests.get(url=self.api_url, params=params)
+
+        if int(response.status_code) != 200:
+            assert ValueError(
+                f'The request for "{page_id}" returned with status_code: {response.status_code}'
+            ) #todo: something better
+
+        html_content = response.json()['query']['pages'][str(page_id)]['extract']
+        return BeautifulSoup(html_content, 'html.parser').get_text()
+
+
 if __name__ == '__main__':
     # links = [
         # 'https://www.imdb.com/search/title?genres=drama&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt',
@@ -101,27 +149,4 @@ if __name__ == '__main__':
     #         print('page', num)
     #         url = link.format(num)
     #         IMDBApiExtractor().get_and_save_from_html_page(url)
-
-    movie_name = 'TheGodFather1995'
-    PARAMS = {
-        'action': 'query',
-        'format': 'json',
-        'list': 'search',
-        'srsearch': movie_name
-    }
-    r = requests.get(url=r'https://en.wikipedia.org/w/api.php', params=PARAMS)
-    # for movie in r.json()["query"]["search"]:
-    #     page_id = movie["pageid"]
-
-    page_id = r.json()["query"]["search"][0]["pageid"]  # the first one is the closest?
-
-    PARAMS = {
-        'action': 'parse',
-        'pageid': page_id,
-        'format': 'json',
-        'prop': 'text'
-    }
-    r = requests.get(url=r'https://en.wikipedia.org/w/api.php', params=PARAMS)
-    print(r.json()['parse']['text']['*'])
-    # soup = BeautifulSoup(r.json()['parse']['text']['*'], 'html.parser')
-    # print(soup.get_text())
+    print('Hello')
