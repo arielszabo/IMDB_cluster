@@ -89,12 +89,12 @@ class WikiApiExtractor(object):
             'list': 'search',
             'srsearch': text_to_search_for
         }
-        response = requests.get(url= self.api_url, params=get_params)
+        response = requests.get(url=self.api_url, params=get_params)
 
         if int(response.status_code) != 200:
             assert ValueError(
                 f'The request for "{text_to_search_for}" returned with status_code: {response.status_code}'
-            ) #todo: something better
+            )  #todo: something better
 
         if response.json()['query']['searchinfo']['totalhits'] == 0:
             print(f'"{text_to_search_for}" have no results')
@@ -124,6 +124,19 @@ class WikiApiExtractor(object):
         html_content = response.json()['query']['pages'][str(page_id)]['extract']
         return BeautifulSoup(html_content, 'html.parser').get_text()
 
+    def extract_and_save(self, movie_text, imdb_id):
+        wiki_page_id = self.get_page_id_by_text_search(movie_text)
+        text_content = self.extract_text_first_section(wiki_page_id)
+
+        wiki_json = {'text': text_content,
+                     'wiki_page_id': wiki_page_id,
+                     'imdb_id': imdb_id}
+
+        wiki_data_path = os.path.join('raw_data', 'wiki_data')
+        os.makedirs(wiki_data_path, exist_ok=True)
+        with open(os.path.join(wiki_data_path, '{}.json'.format(wiki_page_id)), 'w') as j_file:
+            json.dump(wiki_json, j_file)
+
 
 if __name__ == '__main__':
     # links = [
@@ -149,4 +162,14 @@ if __name__ == '__main__':
     #         print('page', num)
     #         url = link.format(num)
     #         IMDBApiExtractor().get_and_save_from_html_page(url)
-    print('Hello')
+
+    data_path = os.path.join('raw_data')
+    for j in os.listdir(data_path):
+        if '.json' in j and not ('!' in j or '?' in j):
+            with open(os.path.join(data_path, j), 'r') as movie_json_file:
+                print(j)
+                movie_json = json.load(movie_json_file)
+                query_info = [movie_json['Title'], movie_json['Year'], movie_json['Director'], movie_json['Type']]
+                imdbid = movie_json['imdbID']
+                WikiApiExtractor().extract_and_save(movie_text=' '.join(query_info),
+                                                    imdb_id=imdbid)

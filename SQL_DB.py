@@ -8,7 +8,7 @@ class DB(object):
     def __init__(self, db_name="IMDB_data.db"):
         self.db_name = db_name
         self.raw_data_path_folder = r'raw_data'
-        self.table_metadata = {'movies':{'Actors':'VARCRCHAR(400)',
+        self.table_metadata = {'movies': {'Actors':'VARCRCHAR(400)',
                                                        'Awards':'VARCRCHAR(400)',
                                                        'BoxOffice':'VARCRCHAR(400)',
                                                        'Country':'VARCRCHAR(400)',
@@ -33,9 +33,13 @@ class DB(object):
                                                        'imdbID':'VARCRCHAR(400) UNIQUE NOT NULL',
                                                        'imdbRating':'DOUBLE',
                                                        'imdbVotes':'VARCRCHAR(400)'},
-                               'ratings':{'imdbID':'VARCRCHAR(400) NOT NULL',
+                               'ratings': {'imdbID':'VARCRCHAR(400) NOT NULL',
                                                         'Value':'VARCRCHAR(100)',
-                                                        'Source':'VARCRCHAR(100)'}}  # {table_name:{column_name:column_type}}
+                                                        'Source':'VARCRCHAR(100)'},
+                               'wiki_media': {'IMDB_ID': 'VARCRCHAR(400) NOT NULL',
+                                              'Wiki_ID': 'VARCRCHAR(400) UNIQUE NOT NULL',
+                                              'text': 'BLOB'}
+                                }  # {table_name:{column_name:column_type}}
         self.validate_field_names()
         self.create_DB()
 
