@@ -83,6 +83,8 @@ class WikiApiExtractor(object):
         self.api_url = r'https://en.wikipedia.org/w/api.php'
 
     def get_page_id_by_text_search(self, text_to_search_for):
+        if len(text_to_search_for) > 300: # WIKI Search request have a maximum allowed length of 300
+            text_to_search_for = text_to_search_for[:300]
         get_params = {
             'action': 'query',
             'format': 'json',
@@ -92,13 +94,13 @@ class WikiApiExtractor(object):
         response = requests.get(url=self.api_url, params=get_params)
 
         if int(response.status_code) != 200:
-            assert ValueError(
-                f'The request for "{text_to_search_for}" returned with status_code: {response.status_code}'
-            )  #todo: something better
+            print(f'The request for "{text_to_search_for}" returned with status_code: {response.status_code}')
+            # todo: something better
+            return None
 
         if response.json()['query']['searchinfo']['totalhits'] == 0:
             print(f'"{text_to_search_for}" have no results')
-            return None  #todo: something better
+            return None  # todo: something better
 
         if 'error' in response.json():
             print(f'"{text_to_search_for}" had an error')
@@ -126,16 +128,17 @@ class WikiApiExtractor(object):
 
     def extract_and_save(self, movie_text, imdb_id):
         wiki_page_id = self.get_page_id_by_text_search(movie_text)
-        text_content = self.extract_text_first_section(wiki_page_id)
+        if wiki_page_id:
+            text_content = self.extract_text_first_section(wiki_page_id)
 
-        wiki_json = {'text': text_content,
-                     'wiki_page_id': wiki_page_id,
-                     'imdb_id': imdb_id}
+            wiki_json = {'text': text_content,
+                         'wiki_page_id': wiki_page_id,
+                         'imdb_id': imdb_id}
 
-        wiki_data_path = os.path.join('raw_data', 'wiki_data')
-        os.makedirs(wiki_data_path, exist_ok=True)
-        with open(os.path.join(wiki_data_path, '{}.json'.format(wiki_page_id)), 'w') as j_file:
-            json.dump(wiki_json, j_file)
+            wiki_data_path = os.path.join('raw_data', 'wiki_data')
+            os.makedirs(wiki_data_path, exist_ok=True)
+            with open(os.path.join(wiki_data_path, 'wiki_data_for_{}.json'.format(imdb_id)), 'w') as j_file:
+                json.dump(wiki_json, j_file)
 
 
 if __name__ == '__main__':
@@ -163,13 +166,20 @@ if __name__ == '__main__':
     #         url = link.format(num)
     #         IMDBApiExtractor().get_and_save_from_html_page(url)
 
-    data_path = os.path.join('raw_data')
-    for j in os.listdir(data_path):
-        if '.json' in j and not ('!' in j or '?' in j):
-            with open(os.path.join(data_path, j), 'r') as movie_json_file:
-                print(j)
+    # Extract The wiki data for the movie
+    existing_movies_wiki = [re.search(r'tt\d+\.json', wiki_json).group(0)
+                            for wiki_json in os.listdir(os.path.join('raw_data', 'wiki_data'))]
+
+    for movie_json_file_name in os.listdir('raw_data'):
+        if movie_json_file_name in existing_movies_wiki:
+            print(f'{movie_json_file_name} exist')
+            continue
+        if '.json' in movie_json_file_name and not ('!' in movie_json_file_name or '?' in movie_json_file_name):
+            with open(os.path.join('raw_data', movie_json_file_name), 'r') as movie_json_file:
+                print(movie_json_file_name)
                 movie_json = json.load(movie_json_file)
-                query_info = [movie_json['Title'], movie_json['Year'], movie_json['Director'], movie_json['Type']]
+
+                query_info = [movie_json['Title'], movie_json['Year'], movie_json['Type'], movie_json['Director']]
                 imdbid = movie_json['imdbID']
                 WikiApiExtractor().extract_and_save(movie_text=' '.join(query_info),
                                                     imdb_id=imdbid)
