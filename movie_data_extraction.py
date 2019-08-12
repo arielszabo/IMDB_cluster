@@ -142,7 +142,14 @@ class WikiApiExtractor(object):
 
 
 if __name__ == '__main__':
-    # links = [
+    links = [
+        'https://www.imdb.com/search/title?genres=Action&explore=title_type,genres&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=75c37eae-37a7-4027-a7ca-3fd76067dd90&pf_rd_r=J4TJ30NNSXTY329MNNC9&pf_rd_s=center-1&pf_rd_t=15051&pf_rd_i=genre&page={}&ref_=adv_nxt',
+        'https://www.imdb.com/search/title?genres=Music&explore=title_type,genres&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=75c37eae-37a7-4027-a7ca-3fd76067dd90&pf_rd_r=J4TJ30NNSXTY329MNNC9&pf_rd_s=center-1&pf_rd_t=15051&pf_rd_i=genre&page={}&ref_=adv_nxt',
+        'https://www.imdb.com/search/title?genres=Talk-Show&explore=title_type,genres&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=75c37eae-37a7-4027-a7ca-3fd76067dd90&pf_rd_r=J4TJ30NNSXTY329MNNC9&pf_rd_s=center-1&pf_rd_t=15051&pf_rd_i=genre&page={}&ref_=adv_nxt',
+        'https://www.imdb.com/search/title?genres=Family&explore=title_type,genres&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=75c37eae-37a7-4027-a7ca-3fd76067dd90&pf_rd_r=J4TJ30NNSXTY329MNNC9&pf_rd_s=center-1&pf_rd_t=15051&pf_rd_i=genre&page={}&ref_=adv_nxt',
+        'https://www.imdb.com/search/title?genres=Drama&explore=title_type,genres&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=75c37eae-37a7-4027-a7ca-3fd76067dd90&pf_rd_r=J4TJ30NNSXTY329MNNC9&pf_rd_s=center-1&pf_rd_t=15051&pf_rd_i=genre&page={}&ref_=adv_nxt',
+        'https://www.imdb.com/search/title?genres=Sci-Fi&explore=title_type,genres&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=75c37eae-37a7-4027-a7ca-3fd76067dd90&pf_rd_r=J4TJ30NNSXTY329MNNC9&pf_rd_s=center-1&pf_rd_t=15051&pf_rd_i=genre&page={}&ref_=adv_nxt',
+        'https://www.imdb.com/search/title?genres=Game-Show&explore=title_type,genres&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=75c37eae-37a7-4027-a7ca-3fd76067dd90&pf_rd_r=J4TJ30NNSXTY329MNNC9&pf_rd_s=center-1&pf_rd_t=15051&pf_rd_i=genre&page={}&ref_=adv_nxt',
         # 'https://www.imdb.com/search/title?genres=drama&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt',
         # 'https://www.imdb.com/search/title?genres=family&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt',
         # 'https://www.imdb.com/search/title?genres=fantasy&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt',
@@ -158,13 +165,13 @@ if __name__ == '__main__':
         # 'https://www.imdb.com/search/title?genres=thriller&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt',
         # 'https://www.imdb.com/search/title?genres=war&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt',
         # 'https://www.imdb.com/search/title?genres=western&sort=user_rating,desc&title_type=feature&num_votes=25000,&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=5aab685f-35eb-40f3-95f7-c53f09d542c3&pf_rd_r=VTZ711NYM2Q1KSKFRENE&pf_rd_s=right-6&pf_rd_t=15506&pf_rd_i=top&page={}&ref_=adv_nxt'
-        #      ]
-    # for link in links:
-    #     print(link[link.find('genres=')+7:link.find('&')])
-    #     for num in range(1, 48):
-    #         print('page', num)
-    #         url = link.format(num)
-    #         IMDBApiExtractor().get_and_save_from_html_page(url)
+             ]
+    for link in links:
+        print(link[link.find('genres=')+7:link.find('&')])
+        for num in range(1, 20000):
+            print('page', num)
+            url = link.format(num)
+            IMDBApiExtractor().get_and_save_from_html_page(url)
 
     # Extract The wiki data for the movie
     existing_movies_wiki = [re.search(r'tt\d+\.json', wiki_json).group(0)
