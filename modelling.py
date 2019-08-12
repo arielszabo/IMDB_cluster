@@ -3,8 +3,13 @@ import re
 import json
 import pandas as pd
 import numpy as np
-from sklearn.feature_extraction.text import CountVectorizer
-
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn import metrics
+import nltk
+from nltk.stem import wordnet, SnowballStemmer
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import operator
 
 class DataLoader(object):
     def __init__(self):
@@ -133,16 +138,30 @@ class MovieVectorization(object):
             zip(*self.movies_n_series_table['Awards'].apply(self.extract_win_and_nominated_awards))
 
         self.movies_n_series_table.drop('Awards', axis=1, inplace=True)
+        #
+        # for column_name in ['Country', 'Director', 'Genre', 'Language', 'Actors', 'Production', 'Writer']:
+        #     if column_name == 'Director':  # There are some co-directors which is noted with parentheses
+        #         self.movies_n_series_table['Director'] = self.movies_n_series_table['Director'].str.replace('\(.+\)', '')
+        #         self.movies_n_series_table = self.movies_n_series_table.join(
+        #             self.extract_from_comma_separated_strings(self.movies_n_series_table, column_name)
+        #         )
+        #     self.movies_n_series_table.drop(column_name, axis=1, inplace=True)
 
-        for column_name in ['Country', 'Director', 'Genre', 'Language', 'Actors', 'Production', 'Writer']:
-            if column_name == 'Director':  # There are some co-directors which is noted with parentheses
-                self.movies_n_series_table['Director'] = self.movies_n_series_table['Director'].str.replace('\(.+\)', '')
-                self.movies_n_series_table = self.movies_n_series_table.join(
-                    self.extract_from_comma_separated_strings(self.movies_n_series_table, column_name)
-                )
-            self.movies_n_series_table.drop(column_name, axis=1, inplace=True)
+        # the main text features:
+        self.movies_n_series_table['full_text'] = self.movies_n_series_table.apply(
+            lambda x: ' '.join(x[['Plot', 'text']].fillna('')), axis=1)
+        self.movies_n_series_table.drop(['Plot', 'text'], axis=1, inplace=True)
 
         return self.movies_n_series_table
+
+
+class StemmedCountVectorizer(CountVectorizer):
+    def build_analyzer(self):
+        analyzer = super(StemmedCountVectorizer, self).build_analyzer()
+        stemmer = SnowballStemmer("english")
+#         lemmatizer = wordnet.WordNetLemmatizer()
+        stops = set(stopwords.words("english"))
+        return lambda doc: ([stemmer.stem(w) for w in analyzer(re.sub("[^\w\s]", "", doc)) if w not in stops])
 
 
 if __name__ == '__main__':
@@ -155,7 +174,31 @@ if __name__ == '__main__':
     movies = MovieVectorization(**dfs)
     movies.movies_cleaning()
     # todo: create for each feature a method so it will be easy with a config file to setup
-    movies.movies_extract_features()
-    print(movies.movies_n_series_table.head())
+    final = movies.movies_extract_features()
 
-    # movies_after_feature_extraction.to_sql(name='movies_extracted', con=engine)
+    print(final.info())
+
+    vec = StemmedCountVectorizer()
+    d = vec.fit_transform(final['full_text']).toarray()
+    fields = vec.get_feature_names()
+    df = pd.DataFrame(d, columns=fields)
+
+    cosine_simmilarity = metrics.pairwise.cosine_similarity(df)
+    cosine_simmilarity_df = pd.DataFrame(cosine_simmilarity, columns=list(final.index), index=list(final.index))
+
+    print(cosine_simmilarity_df.loc['tt0468569', :].sort_values())
+
+    # print(cosine_simmilarity_df.apply(lambda r: set(r.nlargest(2).index) - set(r.index)))
+    exit()
+    #
+    # def movie_sorting(cosine_simmilarity_df):
+    #     for id, row in cosine_simmilarity_df.iterrows():
+    #
+    #         sorted_x = sorted(row.to_dict().items(), key=operator.itemgetter(1))
+    #         print(sorted_x)
+    #         exit()
+
+
+    movie_sorting(cosine_simmilarity_df)
+
+    print(cosine_simmilarity_df.head())
